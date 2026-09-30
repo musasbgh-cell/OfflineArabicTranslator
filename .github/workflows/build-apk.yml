@@ -28,6 +28,9 @@ jobs:
           # Kotlin/Android ScrollView exposes this Java property as isFillViewport.
           sed -i 's/fillViewport = true/isFillViewport = true/' OfflineArabicTranslator/app/src/main/java/com/masab/offlinetranslator/MainActivity.kt
           grep -n 'isFillViewport = true' OfflineArabicTranslator/app/src/main/java/com/masab/offlinetranslator/MainActivity.kt
+          # Use a fresh application id so Android cannot confuse this with any prior debug-signed build.
+          sed -i 's/applicationId = "com.masab.offlinetranslator"/applicationId = "com.masab.offlinetranslator.compat"/' OfflineArabicTranslator/app/build.gradle.kts
+          grep -n 'applicationId' OfflineArabicTranslator/app/build.gradle.kts
           test -f OfflineArabicTranslator/tools/build_unified.py
           echo "PROJECT_DIR=$GITHUB_WORKSPACE/OfflineArabicTranslator" >> "$GITHUB_ENV"
 
@@ -59,11 +62,20 @@ jobs:
         working-directory: OfflineArabicTranslator
         run: python tools/build_unified.py --mode full
 
+      - name: Verify APK install package and signature
+        working-directory: OfflineArabicTranslator
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/34.0.0/apksigner" verify --verbose --print-certs "$APK"
+          "$ANDROID_HOME/build-tools/34.0.0/zipalign" -c -v 4 "$APK"
+          "$ANDROID_HOME/build-tools/34.0.0/aapt" dump badging "$APK" | head -20
+          cp "$APK" app/build/outputs/apk/debug/OfflineArabicTranslator-Compat.apk
+
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: OfflineArabicTranslator-APK
-          path: OfflineArabicTranslator/app/build/outputs/apk/debug/app-debug.apk
+          name: OfflineArabicTranslator-Compat-APK
+          path: OfflineArabicTranslator/app/build/outputs/apk/debug/OfflineArabicTranslator-Compat.apk
           if-no-files-found: error
           compression-level: 0
           retention-days: 15
