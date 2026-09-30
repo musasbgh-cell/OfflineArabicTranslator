@@ -17,9 +17,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Extract project source
+      - name: Rebuild and verify project source
         run: |
-          unzip -q OfflineArabicTranslator_Source_v0_3.zip
+          mkdir -p .rebuild
+          cat .source_parts/00.b64 .source_parts/01.b64 .source_parts/02.b64 .source_parts/03.b64 .source_parts/04.b64 .source_parts/05.b64 > .rebuild/source.b64
+          base64 --decode .rebuild/source.b64 > .rebuild/source.zip
+          echo "e7c47f48023489f702a1fdce7993288a2f16e2b7ec890d15b61a166a1bdcc971  .rebuild/source.zip" | sha256sum --check -
+          unzip -t .rebuild/source.zip
+          unzip -q .rebuild/source.zip
+          test -f OfflineArabicTranslator/tools/build_unified.py
           echo "PROJECT_DIR=$GITHUB_WORKSPACE/OfflineArabicTranslator" >> "$GITHUB_ENV"
 
       - uses: actions/setup-java@v4
