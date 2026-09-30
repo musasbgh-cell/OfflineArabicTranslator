@@ -25,6 +25,9 @@ jobs:
           echo "e7c47f48023489f702a1fdce7993288a2f16e2b7ec890d15b61a166a1bdcc971  .rebuild/source.zip" | sha256sum --check -
           unzip -t .rebuild/source.zip
           unzip -q .rebuild/source.zip
+          # Kotlin/Android ScrollView exposes this Java property as isFillViewport.
+          sed -i 's/fillViewport = true/isFillViewport = true/' OfflineArabicTranslator/app/src/main/java/com/masab/offlinetranslator/MainActivity.kt
+          grep -n 'isFillViewport = true' OfflineArabicTranslator/app/src/main/java/com/masab/offlinetranslator/MainActivity.kt
           test -f OfflineArabicTranslator/tools/build_unified.py
           echo "PROJECT_DIR=$GITHUB_WORKSPACE/OfflineArabicTranslator" >> "$GITHUB_ENV"
 
